@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5.2 Implementación de algoritmos Zero-R y One-R</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+</head>
+<body>
+    <form action="/upload-file" enctype="multipart/form-data" method="POST">
+        <input name="file" type="file" accept=".csv">
+
+        <label>Iteraciones:
+            <input name="iteraciones" type="number" value="{{ iteraciones }}">
+        </label>
+        
+        <div>
+            Modelo:
+            <label>
+                <input name="modelo" type="radio" value="zero-r" {{ "checked" if modelo == "zero-r" else "" }}> Zero-R
+            </label>
+            <label>
+                <input name="modelo" type="radio" value="one-r" {{ "checked" if modelo == "one-r" else "" }}> One-R
+            </label>
+        </div>
+        <input type="submit">
+    </form>
+</body>
+</html>

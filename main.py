@@ -1,5 +1,6 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Request, Form
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 import pandas as pd
 from io import StringIO
 from sklearn.model_selection import train_test_split
@@ -7,38 +8,18 @@ from sklearn.model_selection import train_test_split
 app = FastAPI()
 dataframe = None
 
-@app.get("/")
-def home():
-    content = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>5.2 Implementación de algoritmos Zero-R y One-R</title>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
-        </head>
-        <body>
-            <form action="/upload-file" enctype="multipart/form-data" method="POST">
-                <input name="file" type="file">
-                <label>Iteraciones:
-                    <input name="iteraciones" type="number" value="1">
-                </label>
-                <label>
-                    <input name="modelo" type="radio" value="zero-r" checked>Zero-R
-                </label>
-                <label>
-                    <input name="modelo" type="radio" value="one-r">One-R
-                </label>
-                <input type="submit">
-            </form>
-        </body>
-        </html>
-    """
-    return HTMLResponse(content=content)
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request, modelo="zero-r", iteraciones=1):
+    return templates.TemplateResponse(
+        name="index.html",
+        request=request,
+        context={"modelo": modelo.lower(), "iteraciones": iteraciones}
+    )
 
 @app.post("/upload-file")
-async def uploadFile(file: UploadFile):
+async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int = Form(...)):
     global dataframe
 
     content = await file.read()
@@ -46,7 +27,7 @@ async def uploadFile(file: UploadFile):
     data = StringIO(decoded_content)
     dataframe = pd.read_csv(data)
 
-    X_train, X_test, y_train, y_test = train_test_split(dataframe, test_size=0.3)
+    X_train, X_test = train_test_split(dataframe, test_size=0.3)
 
     return dataframe.to_dict()
 
