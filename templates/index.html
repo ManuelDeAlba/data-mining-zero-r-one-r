@@ -5,43 +5,160 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5.2 Implementación de algoritmos Zero-R y One-R</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .titulo{
+            text-align: center;
+            text-wrap: pretty;
+        }
+        .form{
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+
+            input{
+                width: 100%;
+            }
+
+            & .etiqueta{
+                display: block;
+                margin-bottom: .25rem;
+                font-weight: bold;
+            }
+
+            & .modelo{
+                display: flex;
+                flex-direction: column;
+
+                div{
+                    display: flex;
+                    gap: 1rem;
+
+                    label{
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        background-color: var(--background);
+                        padding: 10px;
+                        border-radius: 6px;
+                        cursor: pointer;
+
+                        input[type="radio"]{
+                            box-shadow: none;
+                        }
+                    }
+                }
+            }
+        }
+        .error{
+            color: rgb(255, 52, 52);
+            text-align: center;
+            transform: translateY(0);
+            transition: transform .5s;
+
+            @starting-style {
+                transform: translateY(5px);
+            }
+        }
+    </style>
 </head>
 <body>
-    <form action="/upload-file" enctype="multipart/form-data" method="POST">
+    <h1 class="titulo">5.2 Implementación de algoritmos Zero-R y One-R</h1>
+
+    <form id="form" class="form" enctype="multipart/form-data" method="POST">
         <input name="file" type="file" accept=".csv" required>
 
-        <div>
-            <label>
-                Iteraciones:
-                <input name="iteraciones" type="number" value="{{ iteraciones }}" required>
-            </label>
-        </div>
+        <label>
+            <span class="etiqueta">Iteraciones:</span>
+            <input name="iteraciones" type="number" value="{{ iteraciones }}" required>
+        </label>
         
-        <div>
-            Modelo:
-            <label>
-                <input name="modelo" type="radio" value="zero-r" {{ "checked" if modelo == "zero-r" else "" }} required> Zero-R
-            </label>
-            <label>
-                <input name="modelo" type="radio" value="one-r" {{ "checked" if modelo == "one-r" else "" }} required> One-R
-            </label>
+        <div class="modelo">
+            <span class="etiqueta">Modelo:</span>
+            <div>
+                <label>
+                    <input name="modelo" type="radio" value="zero-r" {{ "checked" if modelo == "zero-r" else "" }} required> Zero-R
+                </label>
+                <label>
+                    <input name="modelo" type="radio" value="one-r" {{ "checked" if modelo == "one-r" else "" }} required> One-R
+                </label>
+            </div>
         </div>
 
-        <div>
-            <label>
-                Tamaño del conjunto de entrenamiento (%):
-                <input name="train_size" type="number" min="1" max="99" value="{{ train_size }}" required>
-            </label>
-        </div>
+        <label>
+            <span class="etiqueta">Tamaño del conjunto de entrenamiento (%):</span>
+            <input name="train_size" type="number" min="1" max="99" value="{{ train_size }}" required>
+        </label>
 
-        <div>
-            <label>
-                Atributo clase:
-                <input name="clase" type="text" value="{{ clase }}" required>
-            </label>
-        </div>
+        <label>
+            <span class="etiqueta">Atributo clase:</span>
+            <input name="clase" type="text" value="{{ clase }}" required>
+        </label>
 
         <input type="submit">
     </form>
+
+    <div id="resultado"></div>
+    <script>
+        const form = document.getElementById("form");
+        const resultado = document.getElementById("resultado");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            
+            try{
+                const response = await fetch("{{ url_for('uploadFile') }}", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if(data.error){
+                    resultado.innerHTML = `<p class="error">${data.message}</p>`;
+                    return;
+                }
+
+                ({modelo, clase, iteraciones, train_size, resultados} = data);
+                
+                resultado.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Iteration</th>
+                                <th>Accuracy</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${resultados.map(({accuracy, precision, recall, f1}, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${accuracy.toFixed(4)}</td>
+                                    <td>${precision.toFixed(4)}</td>
+                                    <td>${recall.toFixed(4)}</td>
+                                    <td>${f1.toFixed(4)}</td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                `
+            } catch(e) {
+                if(e instanceof TypeError){
+                    resultado.innerHTML = `<p class="error">Hubo un error en el servidor</p>`;
+                }
+            }
+        });
+    </script>
 </body>
 </html>

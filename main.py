@@ -14,6 +14,7 @@ dataframe = None
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
+#? http://localhost:8000/?iteraciones=2&modelo=one-r&train_size=70&clase=clase
 async def home(request: Request, modelo="zero-r", iteraciones=1, clase="", train_size=70):
     return templates.TemplateResponse(
         name="index.html",
@@ -32,8 +33,11 @@ async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int
     dataframe = pd.read_csv(data)
 
     # Separar el dataframe en atributos normales y clase
-    X = dataframe.drop(columns=[clase])
-    y = dataframe[clase]
+    try:
+        X = dataframe.drop(columns=[clase])
+        y = dataframe[clase]
+    except KeyError:
+        return {"error": True, "message": "La clase especificada no existe en el archivo"}
 
     resultados = []
 
