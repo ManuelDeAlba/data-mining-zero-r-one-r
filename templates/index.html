@@ -10,9 +10,12 @@
     <form action="/upload-file" enctype="multipart/form-data" method="POST">
         <input name="file" type="file" accept=".csv">
 
-        <label>Iteraciones:
-            <input name="iteraciones" type="number" value="{{ iteraciones }}">
-        </label>
+        <div>
+            <label>
+                Iteraciones:
+                <input name="iteraciones" type="number" value="{{ iteraciones }}">
+            </label>
+        </div>
         
         <div>
             Modelo:
@@ -24,9 +27,20 @@
             </label>
         </div>
 
-        <label>Atributo clase:
-            <input name="clase" type="text" value="{{ clase }}">
-        </label>
+        <div>
+            <label>
+                Tamaño del conjunto de entrenamiento:
+                <input name="test_size" type="number" min="0" max="100" value="{{ test_size }}">
+            </label>
+        </div>
+
+        <div>
+            <label>
+                Atributo clase:
+                <input name="clase" type="text" value="{{ clase }}">
+            </label>
+        </div>
+
         <input type="submit">
     </form>
 </body>
