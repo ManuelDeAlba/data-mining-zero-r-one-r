@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 import pandas as pd
 from io import StringIO
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 app = FastAPI()
 dataframe = None
@@ -35,7 +36,7 @@ async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int
     # Se repetirá el proceso dependiendo de las iteraciones
     for i in range(iteraciones):
         # Se divide el conjunto de entrenamiento y prueba
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size/100, shuffle=True)
 
         # Aplicar el modelo correspondiente
         if modelo == "zero-r":
