@@ -9,12 +9,13 @@ from sklearn.preprocessing import LabelEncoder
 from mlxtend.classifier import OneRClassifier
 
 app = FastAPI()
-dataframe = None
 
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/", response_class=HTMLResponse)
+# Endpoint que retorna el template de la página principal
+# Se pueden utilizar query params para pasar los valores iniciales y no perderlos al recargar la página
 #? http://localhost:8000/?iteraciones=2&modelo=one-r&train_size=70&clase=clase
+@app.get("/", response_class=HTMLResponse)
 async def home(request: Request, modelo="zero-r", iteraciones=1, clase="", train_size=70):
     return templates.TemplateResponse(
         name="index.html",
@@ -22,24 +23,25 @@ async def home(request: Request, modelo="zero-r", iteraciones=1, clase="", train
         context={"modelo": modelo.lower(), "iteraciones": iteraciones, "clase": clase, "train_size": train_size}
     )
 
+# Endpoint para subir un archivo CSV y realizar el proceso de ZeroR o OneR
+# Se pueden pasar los valores del modelo, iteraciones, clase y train_size como el body de la petición como form-data
+# Retorna un JSON con los resultados de las iteraciones y los parámetros utilizados en el proceso
 @app.post("/upload-file")
 async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int = Form(...), clase: str = Form(...), train_size: int = Form(...)):
-    global dataframe
-
     # Leer el archivo CSV pasado por el usuario
     content = await file.read()
     decoded_content = content.decode("utf-8")
     data = StringIO(decoded_content)
     dataframe = pd.read_csv(data)
 
-    # Separar el dataframe en atributos normales y clase
+    # Separar el dataframe en atributos normales y clase para la división de los conjuntos de entrenamiento y prueba
     try:
         X = dataframe.drop(columns=[clase])
         y = dataframe[clase]
     except KeyError:
         return {"error": True, "message": "La clase especificada no existe en el archivo"}
 
-    resultados = []
+    resultados = [] # Resultados de las iteraciones para devolver al usuario
 
     # Se repetirá el proceso dependiendo de las iteraciones
     for i in range(iteraciones):
@@ -99,7 +101,7 @@ async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int
             # Obtener las predicciones en su forma original
             y_pred_decoded = label_encoder.inverse_transform(y_pred_encoded)
 
-            # # Calcular métricas
+            # Calcular métricas
             accuracy = accuracy_score(y_test_encoded, y_pred_encoded)
             precision = precision_score(y_test_encoded, y_pred_encoded, average="macro")
             recall = recall_score(y_test_encoded, y_pred_encoded, average="macro")
@@ -125,10 +127,3 @@ async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int
         "clase": clase,
         "train_size": train_size
     }
-
-@app.get("/read-file")
-async def readFile():
-    if dataframe is not None:
-        return dataframe.to_dict()
-    else:
-        return {"error": True, "message": "No file uploaded yet"}
