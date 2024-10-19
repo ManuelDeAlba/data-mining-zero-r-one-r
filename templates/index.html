@@ -116,6 +116,8 @@
             const formData = new FormData(form);
             
             try{
+                resultado.innerHTML = "<h3 class='titulo'>Cargando...</h3>";
+
                 const response = await fetch("{{ url_for('uploadFile') }}", {
                     method: "POST",
                     body: formData
