@@ -71,7 +71,7 @@ async def uploadFile(file: UploadFile, modelo: str = Form(...), iteraciones: int
                 "precision": precision,
                 "recall": recall,
                 "f1": f1,
-                "predicciones": y_pred.tolist(),
+                "predicciones": y_pred,
                 "columnas_train": train.columns.to_list(),
                 "valores_train": train.values.tolist(),
                 "columnas_test": test.columns.to_list(),
